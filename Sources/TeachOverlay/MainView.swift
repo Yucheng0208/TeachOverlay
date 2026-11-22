@@ -920,7 +920,6 @@ struct AboutPane: View {
                     }
                 }
 
-                Text("Made with \u{2665} in Swift").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(24)
             .frame(maxWidth: 640)

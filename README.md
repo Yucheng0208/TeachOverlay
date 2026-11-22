@@ -79,6 +79,20 @@ tools/make-icon.swift     swift tools/make-icon.swift Resources/Logo/logo-source
                           然後 iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
 ```
 
+## 發佈新版本
+
+```bash
+./release.sh 1.0.0
+```
+
+會自動更新版本號、乾淨編譯，並在 `dist/v1.0.0/` 產生：
+
+- `TeachOverlay-1.0.0-macOS-arm64.dmg`：拖曳安裝
+- `TeachOverlay-1.0.0-macOS-arm64.zip`：解壓即用
+- `SHA256SUMS.txt`：校驗碼
+
+發佈說明（五種語言）放在 `docs/release-notes/`。有 Apple Developer 帳號時，設定 `SIGN_IDENTITY` 與 `NOTARY_PROFILE` 即可自動簽章並公證。
+
 ## 授權
 
 本專案以 GNU General Public License v3.0 授權，詳見 [LICENSE](LICENSE)。

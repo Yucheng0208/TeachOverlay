@@ -16,5 +16,5 @@ cp Resources/AppIcon.icns Resources/AppIcon.png "$APP/Contents/Resources/"
 cp Resources/Fonts/*.ttf Resources/Fonts/FontAwesome-LICENSE.txt "$APP/Contents/Resources/"
 codesign --force --options runtime --sign "${SIGN_IDENTITY:--}" "$APP"
 
-echo "✅ 完成：$APP（$(lipo -archs "$APP/Contents/MacOS/TeachOverlay")）"
+echo "完成：$APP（$(lipo -archs "$APP/Contents/MacOS/TeachOverlay")）"
 echo "   執行：open $APP"

@@ -11,3 +11,6 @@ DerivedData/
 # Pocketage 
 build/
 Resources/AppIcon.iconset/
+
+# 發佈檔案（上傳到 GitHub Releases，不放進 git）
+dist/

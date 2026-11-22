@@ -361,7 +361,7 @@ final class OverlayController: ObservableObject {
         guard keystrokesEnabled, !drawMode else { return }
         typed = ""
         lastWasCombo = true
-        showHUD("🔒 " + L("已隱藏"))
+        showHUD(L("已隱藏"))
     }
 
     /// 依設定決定要同步顯示的螢幕
