@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager / Xcode
+.build/
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+
+# Pocketage 
+build/
+Resources/AppIcon.iconset/
