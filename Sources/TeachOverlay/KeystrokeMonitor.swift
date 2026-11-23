@@ -22,6 +22,27 @@ final class KeystrokeMonitor {
     var onIME: ((String, Bool) -> Void)?
 
     var hideInTerminals = true
+    /// 聊天／社群 App 中完全不顯示（連「已隱藏」也不顯示）
+    var hideInChatApps = true
+    var extraExcludedApps: Set<String> = []
+    var chatTitleKeywords: [String] = KeystrokeMonitor.defaultChatKeywords
+
+    static let chatApps: Set<String> = [
+        "jp.naver.line.mac", "com.apple.MobileSMS", "com.facebook.archon", "com.facebook.archon.developerID",
+        "com.hnc.Discord", "ru.keepcoder.Telegram", "org.telegram.desktop", "com.tencent.xinWeChat",
+        "net.whatsapp.WhatsApp", "desktop.WhatsApp", "com.tinyspeck.slackmacgap", "com.microsoft.teams2",
+        "com.microsoft.teams", "org.whispersystems.signal-desktop", "com.skype.skype", "com.kakao.KakaoTalkMac",
+        "com.burbn.instagram", "com.google.Chat",
+    ]
+    static let browsers: Set<String> = [
+        "com.apple.Safari", "com.google.Chrome", "com.microsoft.edgemac", "org.mozilla.firefox",
+        "company.thebrowser.Browser", "com.brave.Browser", "com.operasoftware.Opera", "com.vivaldi.Vivaldi",
+        "com.google.Chrome.canary", "com.apple.SafariTechnologyPreview",
+    ]
+    static let defaultChatKeywords = [
+        "Instagram", "Messenger", "Facebook", "LINE", "WhatsApp", "Discord", "Telegram", "Threads",
+        "WeChat", "Slack", "Microsoft Teams", "Google Chat", "Signal", "KakaoTalk", "Dcard", "Plurk",
+    ]
     var zhuyinEnabled = true
     /// 帳號、學號等隱私欄位：欄位名稱／提示文字／標籤含這些字就隱藏
     var hidePrivateFields = true
@@ -142,6 +163,7 @@ final class KeystrokeMonitor {
         guard type == .keyDown else { return }
         if event.getIntegerValueField(.keyboardEventAutorepeat) != 0 { return }
 
+        if hideInChatApps, isChatContext() { return }   // 聊天中：什麼都不顯示
         if isSensitiveContext() {
             onSuppressed?()
             return
@@ -191,6 +213,20 @@ final class KeystrokeMonitor {
             if hideInTerminals && Self.terminals.contains(bid) { return true }
         }
         return focusedElementIsPrivate()
+    }
+
+    /// 前景是聊天／社群 App，或瀏覽器正在開聊天／社群網站
+    private func isChatContext() -> Bool {
+        guard let app = NSWorkspace.shared.frontmostApplication, let bid = app.bundleIdentifier else { return false }
+        if Self.chatApps.contains(bid) || extraExcludedApps.contains(bid) { return true }
+        guard Self.browsers.contains(bid), !chatTitleKeywords.isEmpty else { return false }
+        let appEl = AXUIElementCreateApplication(app.processIdentifier)
+        AXUIElementSetMessagingTimeout(appEl, 0.1)
+        var win: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(appEl, "AXFocusedWindow" as CFString, &win) == .success,
+              let win, CFGetTypeID(win) == AXUIElementGetTypeID(),
+              let title = axString(win as! AXUIElement, "AXTitle") else { return false }
+        return chatTitleKeywords.contains { !$0.isEmpty && title.range(of: $0, options: .caseInsensitive) != nil }
     }
 
     private func axString(_ el: AXUIElement, _ attr: String) -> String? {

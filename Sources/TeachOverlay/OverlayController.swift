@@ -1,4 +1,5 @@
 import AppKit
+import CoreImage
 import Carbon
 import Combine
 import SwiftUI
@@ -48,6 +49,13 @@ final class OverlayController: ObservableObject {
     @Published var hudPosition: HUDPosition { didSet { d.set(hudPosition.rawValue, forKey: "keys.pos"); applyHUDStyle() } }
     @Published var hudDuration: Double { didSet { d.set(hudDuration, forKey: "keys.duration") } }
     @Published var hideInTerminals: Bool { didSet { d.set(hideInTerminals, forKey: "keys.hideTerm"); keys.hideInTerminals = hideInTerminals } }
+    @Published var hideInChatApps: Bool { didSet { d.set(hideInChatApps, forKey: "keys.hideChat"); keys.hideInChatApps = hideInChatApps } }
+    @Published var extraExcludedApps: [String] {
+        didSet { d.set(extraExcludedApps, forKey: "keys.excludedApps"); keys.extraExcludedApps = Set(extraExcludedApps) }
+    }
+    @Published var chatKeywords: String {
+        didSet { d.set(chatKeywords, forKey: "keys.chatWords"); keys.chatTitleKeywords = Self.splitKeywords(chatKeywords) }
+    }
     @Published var hidePrivateFields: Bool { didSet { d.set(hidePrivateFields, forKey: "keys.hidePrivate"); keys.hidePrivateFields = hidePrivateFields } }
     @Published var privateKeywords: String {
         didSet { d.set(privateKeywords, forKey: "keys.privateWords"); keys.privateKeywords = Self.splitKeywords(privateKeywords) }
@@ -100,13 +108,30 @@ final class OverlayController: ObservableObject {
     @Published private(set) var drawMode = false
     @Published private(set) var whiteboardOn = false
     @Published var boardStyle: BoardStyle {
-        didSet { d.set(boardStyle.rawValue, forKey: "board.style"); overlays.forEach { $0.overlayView.canvas.boardStyle = boardStyle } }
+        didSet {
+            d.set(boardStyle.rawValue, forKey: "board.style")
+            overlays.forEach { $0.overlayView.canvas.boardStyle = boardStyle }
+            // 黑板配白筆、白板配黑筆
+            let s = DrawSettings.shared
+            if boardStyle.isDark && s.colorIndex == 4 { s.colorIndex = 5 }
+            if !boardStyle.isDark && s.colorIndex == 5 { s.colorIndex = 4 }
+        }
     }
     @Published var overlayStyle: OverlayStyle {
         didSet { d.set(overlayStyle.rawValue, forKey: "overlay.style"); refreshTheme() }
     }
     @Published private(set) var overlayTheme = OverlayTheme(dark: true)
     private var appearanceObservation: NSKeyValueObservation?
+
+    // 放大鏡
+    @Published var magnifierOn = false
+    @Published var magnifierZoom: Double { didSet { d.set(magnifierZoom, forKey: "mag.zoom") } }
+    @Published var magnifierSize: Double { didSet { d.set(magnifierSize, forKey: "mag.size") } }
+    @Published var magnifierCircle: Bool { didSet { d.set(magnifierCircle, forKey: "mag.circle") } }
+    let magnifierCapture = MagnifierCapture()
+    var magnifierTimer: Timer?
+    var magnifierHotkeys: [UInt32] = []
+    let ciContext = CIContext(options: [.cacheIntermediates: false])
 
     /// 畫布內容變了（頁碼等），讓工具列重畫
     @Published private(set) var revision = 0
@@ -135,13 +160,15 @@ final class OverlayController: ObservableObject {
             "keys.enabled": true, "keys.font": 44.0, "keys.pos": HUDPosition.bottom.rawValue,
             "keys.duration": 1.6, "keys.hideTerm": true, "keys.hidePrivate": true,
             "keys.privateWords": KeystrokeMonitor.defaultPrivateKeywords.joined(separator: ", "),
-            "keys.zhuyin": true, "keys.display": DisplayTarget.all.rawValue,
+            "keys.zhuyin": true, "keys.hideChat": true,
+            "keys.chatWords": KeystrokeMonitor.defaultChatKeywords.joined(separator: ", "), "keys.display": DisplayTarget.all.rawValue,
             "keys.comboStyle": ComboStyle.words.rawValue, "keys.comboMeaning": true,
             "sc.corner": ShortcutCorner.topRight.rawValue, "sc.hold": 8.0, "sc.pinned": false, "sc.font": 22.0,
             "click.enabled": true, "click.all": false,
             "click.scale": 1.0, "click.duration": 0.6, "click.rings": 2, "click.line": 3.0, "click.fill": 0.25,
             "click.badge": true, "click.long": true, "click.longDelay": 0.5,
             "overlay.style": OverlayStyle.follow.rawValue,
+            "mag.zoom": 2.0, "mag.size": 300.0, "mag.circle": true,
             "spot.radius": 150.0, "spot.dim": 0.62, "board.style": 0,
         ])
         keystrokesEnabled = d.bool(forKey: "keys.enabled")
@@ -149,6 +176,9 @@ final class OverlayController: ObservableObject {
         hudPosition = HUDPosition(rawValue: d.string(forKey: "keys.pos") ?? "") ?? .bottom
         hudDuration = d.double(forKey: "keys.duration")
         hideInTerminals = d.bool(forKey: "keys.hideTerm")
+        hideInChatApps = d.bool(forKey: "keys.hideChat")
+        extraExcludedApps = d.stringArray(forKey: "keys.excludedApps") ?? []
+        chatKeywords = d.string(forKey: "keys.chatWords") ?? ""
         hidePrivateFields = d.bool(forKey: "keys.hidePrivate")
         privateKeywords = d.string(forKey: "keys.privateWords") ?? ""
         zhuyinEnabled = d.bool(forKey: "keys.zhuyin")
@@ -175,6 +205,9 @@ final class OverlayController: ObservableObject {
         spotlightDim = d.double(forKey: "spot.dim")
         boardStyle = BoardStyle(rawValue: d.integer(forKey: "board.style")) ?? .white
         overlayStyle = OverlayStyle(rawValue: d.string(forKey: "overlay.style") ?? "") ?? .follow
+        magnifierZoom = d.double(forKey: "mag.zoom")
+        magnifierSize = d.double(forKey: "mag.size")
+        magnifierCircle = d.bool(forKey: "mag.circle")
     }
 
     /// 依外觀設定更新螢幕提示配色
@@ -201,6 +234,9 @@ final class OverlayController: ObservableObject {
 
     func start() {
         keys.hideInTerminals = hideInTerminals
+        keys.hideInChatApps = hideInChatApps
+        keys.extraExcludedApps = Set(extraExcludedApps)
+        keys.chatTitleKeywords = Self.splitKeywords(chatKeywords)
         keys.hidePrivateFields = hidePrivateFields
         keys.privateKeywords = Self.splitKeywords(privateKeywords)
         keys.zhuyinEnabled = zhuyinEnabled
@@ -245,6 +281,11 @@ final class OverlayController: ObservableObject {
 
         registerHotkeys()
 
+        TimerPanel.shared.controller = self
+        PickerPanel.shared.controller = self
+        BellScheduler.shared.onRing = { [weak self] e in self?.showBellBanner(e) }
+        BellScheduler.shared.start()
+
         appearanceObservation = NSApp.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
             DispatchQueue.main.async {
                 MainActor.assumeIsolated { self?.refreshTheme() }
@@ -286,11 +327,11 @@ final class OverlayController: ObservableObject {
         }
     }
 
-    private func overlay(at global: CGPoint) -> OverlayWindow? {
+    func overlay(at global: CGPoint) -> OverlayWindow? {
         overlays.first { NSMouseInRect(global, $0.frame, false) }
     }
 
-    private var overlayUnderMouse: OverlayWindow? {
+    var overlayUnderMouse: OverlayWindow? {
         overlay(at: NSEvent.mouseLocation) ?? overlays.first
     }
 
@@ -305,11 +346,20 @@ final class OverlayController: ObservableObject {
         hk.register(keyCode: kVK_ANSI_W, modifiers: m) { [weak self] in self?.toggleWhiteboard() }
         hk.register(keyCode: kVK_ANSI_C, modifiers: m) { [weak self] in self?.toggleClickPulse() }
         hk.register(keyCode: kVK_ANSI_X, modifiers: m) { [weak self] in self?.turnOffAll() }
+        hk.register(keyCode: kVK_ANSI_T, modifiers: m) { TimerPanel.shared.toggle() }
+        hk.register(keyCode: kVK_ANSI_R, modifiers: m) { PickerStore.shared.draw() }
+        hk.register(keyCode: kVK_ANSI_Z, modifiers: m) { [weak self] in self?.toggleMagnifier() }
+        hk.register(keyCode: kVK_ANSI_P, modifiers: m) { [weak self] in self?.captureScreenshot(.selection) }
+        hk.register(keyCode: kVK_ANSI_B, modifiers: m) { BlackoutController.shared.toggle() }
+        hk.register(keyCode: kVK_ANSI_L, modifiers: m) { ClockController.shared.toggle() }
     }
 
     /// ⌃⌥X：關閉聚光燈、畫圖、白板、清除快捷鍵紀錄
     func turnOffAll() {
         if spotlightOn { toggleSpotlight() }
+        if magnifierOn { toggleMagnifier() }
+        ClockController.shared.hide()
+        BlackoutController.shared.deactivate()
         exitDraw()
         shortcutHistory.removeAll()
         renderShortcuts()
@@ -608,7 +658,7 @@ final class OverlayController: ObservableObject {
         enterDraw(whiteboard: !whiteboardOn)
     }
 
-    private func enterDraw(whiteboard: Bool) {
+    func enterDraw(whiteboard: Bool) {
         if !drawMode {
             let front = NSWorkspace.shared.frontmostApplication
             previousApp = front?.processIdentifier == getpid() ? nil : front
@@ -658,6 +708,7 @@ final class OverlayController: ObservableObject {
         if e.modifierFlags.contains(.command) {
             if chars == "z" { canvas.undo() }
             if chars == "s" && whiteboardOn { saveWhiteboard(canvas) }
+            if chars == "c" && whiteboardOn { copyWhiteboard(canvas) }
             return
         }
 
@@ -673,6 +724,8 @@ final class OverlayController: ObservableObject {
             case "a": s.tool = .arrow
             case "r": s.tool = .rect
             case "o": s.tool = .ellipse
+            case "g": s.tool = .compass
+            case "u": canvas.toggleRuler()
             case "1", "2", "3", "4", "5", "6": s.colorIndex = Int(chars)! - 1
             case "=", "+": s.width = min(s.width + 2, 40)
             case "-": s.width = max(s.width - 2, 2)
@@ -682,6 +735,13 @@ final class OverlayController: ObservableObject {
             case "n" where whiteboardOn: canvas.newPage()
             default: break
             }
+        }
+    }
+
+    func copyWhiteboard(_ canvas: CanvasView? = nil) {
+        guard let canvas = canvas ?? overlayUnderMouse?.overlayView.canvas else { return }
+        if canvas.copyToPasteboard() {
+            overlayUnderMouse?.overlayView.hud.show(L("已拷貝圖片"), duration: 1.5)
         }
     }
 

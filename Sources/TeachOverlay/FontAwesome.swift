@@ -21,6 +21,11 @@ enum FA: UInt32 {
     case sun = 0xf185, moon = 0xf186, circleHalfStroke = 0xf042
     case circleQuestion = 0xf059, bug = 0xf188, download = 0xf019, book = 0xf02d, circlePlay = 0xf144
     case github = 0xf09b   // brands
+    case compassDrafting = 0xf568, ruler = 0xf545, camera = 0xf030, magnifyingGlassPlus = 0xf00e
+    case magnifyingGlassMinus = 0xf010, stopwatch = 0xf2f2, hourglassHalf = 0xf252, play = 0xf04b
+    case pause = 0xf04c, rotateRight = 0xf2f9, forwardStep = 0xf051, copy = 0xf0c5, cropSimple = 0xf565
+    case shapes = 0xf61f, user = 0xf007, bell = 0xf0f3, shuffle = 0xf074, users = 0xf0c0
+    case fileImport = 0xf56f, userSlash = 0xf506, checkDouble = 0xf560, hashtag = 0x23, dice = 0xf522
 
     var glyph: String { String(Character(UnicodeScalar(rawValue)!)) }
 }
@@ -41,6 +46,17 @@ enum AppLinks {
     static let repo = URL(string: "https://github.com/Yucheng0208/TeachOverlay")!
     static let issues = URL(string: "https://github.com/Yucheng0208/TeachOverlay/issues")!
     static let releases = URL(string: "https://github.com/Yucheng0208/TeachOverlay/releases")!
+    static let author = "Yu-Cheng Chang"
+    static let authorGitHub = URL(string: "https://github.com/Yucheng0208")!
+    static let authorWebsite = URL(string: "https://www.yucheng208.net/")!
+    static let firstYear = 2026
+
+    /// 版權年份每年元旦自動更新：© 2026–目前年份
+    static var copyright: String {
+        let year = Calendar.current.component(.year, from: Date())
+        let span = year > firstYear ? "\(firstYear)–\(year)" : "\(firstYear)"
+        return "© \(span) \(author)"
+    }
 }
 
 enum FontAwesome {

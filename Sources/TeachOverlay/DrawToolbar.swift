@@ -9,6 +9,7 @@ extension DrawTool {
         case .arrow: .arrowRight
         case .rect: .square
         case .ellipse: .circle
+        case .compass: .compassDrafting
         }
     }
     var faStyle: FAStyle { self == .rect || self == .ellipse ? .regular : .solid }
@@ -35,6 +36,10 @@ struct DrawToolbar: View {
                 ToolButton(icon: t.fa, style: t.faStyle, help: "\(L(t.rawValue))（\(t.key)）", selected: draw.tool == t) {
                     draw.tool = t
                 }
+            }
+
+            ToolButton(icon: .ruler, help: L("尺") + "（U）", selected: canvas()?.ruler != nil) {
+                canvas()?.toggleRuler()
             }
 
             sep
@@ -80,9 +85,11 @@ struct DrawToolbar: View {
                 ToolButton(icon: .chevronRight, help: L("下一頁") + "（→）") { canvas()?.goToPage(1) }
                 ToolButton(icon: .fileCirclePlus, help: L("新增一頁") + "（N）") { canvas()?.newPage() }
                 ToolButton(icon: .floppyDisk, help: L("存成 PNG 到桌面") + "（⌘S）") { controller.saveWhiteboard(canvas()) }
+                ToolButton(icon: .copy, help: L("拷貝圖片") + "（⌘C）") { controller.copyWhiteboard(canvas()) }
             }
 
             sep
+            ToolButton(icon: .camera, help: L("截圖並標註") + "（⌃⌥P）") { controller.captureScreenshot(.selection) }
             ToolButton(icon: controller.whiteboardOn ? .display : .chalkboard,
                        help: (controller.whiteboardOn ? L("回到螢幕標註") : L("切換到白板")) + "（W）") {
                 controller.switchDrawMode()

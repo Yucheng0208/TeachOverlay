@@ -12,6 +12,10 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/TeachOverlay"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# 版權年份依編譯當年自動更新
+YEAR=$(date +%Y)
+if [ "$YEAR" -gt 2026 ]; then SPAN="2026–$YEAR"; else SPAN="2026"; fi
+plutil -replace NSHumanReadableCopyright -string "© $SPAN Yu-Cheng Chang. GPL-3.0" "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/AppIcon.png "$APP/Contents/Resources/"
 cp Resources/Fonts/*.ttf Resources/Fonts/FontAwesome-LICENSE.txt "$APP/Contents/Resources/"
 codesign --force --options runtime --sign "${SIGN_IDENTITY:--}" "$APP"

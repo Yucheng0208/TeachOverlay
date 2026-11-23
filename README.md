@@ -1,99 +1,108 @@
-# TeachOverlay — macOS 教學螢幕助手（Apple Silicon）
+<p align="center"><img src="Resources/AppIcon.png" width="128" alt="TeachOverlay"></p>
 
-專案頁面：https://github.com/Yucheng0208/TeachOverlay
+<h1 align="center">TeachOverlay</h1>
 
-純 Swift（AppKit + SwiftUI + Core Animation），macOS 13 以上，編譯為 arm64 原生版本。
-有主控台視窗（所有設定都可在介面調整、自動儲存）＋選單列圖示，圖示全部使用 Font Awesome Free 6.7.2。
+<p align="center"><b>繁體中文</b> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.en.md">English</a> · <a href="README.ja.md">日本語</a> · <a href="README.ko.md">한국어</a></p>
+
+上課、錄影、直播時，讓學生和觀眾看清楚你按了什麼、點了哪裡。TeachOverlay 是一套給老師用的 Mac 螢幕教學工具：放大顯示按鍵、標示滑鼠、在螢幕上畫重點，還有白板、計時器、上下課鐘聲與抽籤。
 
 ## 功能
 
-| 功能 | 快捷鍵 | 說明 |
-|---|---|---|
-| 放大顯示按鍵 | ⌃⌥K | 打字內容與組合鍵，位置（上/下）、大小、停留時間可調 |
-| 注音顯示 | 自動 | 先顯示注音符號，選字後換成中文（內建注音標準鍵盤、小麥注音） |
-| 組合鍵說明 | 自動 | 顯示成「Command + C  複製」（也可改成 ⌘C），常見快捷鍵附功能說明 |
-| 快捷鍵懸停保留 | 自動 | 組合鍵堆疊在左上或右上角，保留時間可調或一直保留 |
-| 隱私欄位隱藏 | 自動 | 密碼、帳號、學號等欄位只顯示「已隱藏」（關鍵字可在介面編輯） |
-| 雙擊脈衝 | ⌃⌥C | 顏色（預設色票＋自訂）、大小、速度、圈數、粗細皆可調 |
-| 滑鼠按鍵／長按 | 自動 | 游標旁顯示左鍵／右鍵／中鍵；長按顯示「長按」與持續圓圈 |
-| 筆記 | — | 主控台內寫筆記（自動儲存、搜尋），可浮動顯示在畫面最上層 |
-| 多語言 | — | 繁中、簡中、English、日本語、한국어，預設跟隨系統，App 內即時切換 |
-| 使用說明 | — | App 內「使用說明」頁：快速開始、功能介紹、常見問題、GitHub 連結（選單「說明」也可開啟） |
-| 明亮／暗黑模式 | — | App 外觀可選跟隨系統／淺色／深色；螢幕提示配色可跟隨外觀或固定深淺 |
-| 聚光燈 | ⌃⌥S | 周圍變暗、游標處亮圈；⌃⌥↑/↓ 調整大小 |
-| 畫圖標註 | ⌃⌥D | 直接在螢幕上畫，Esc 離開並清除 |
-| 白板 | ⌃⌥W | 全螢幕白板，多頁、四種背景，⌘S 存 PNG 到桌面；離開後頁面保留 |
-| 關閉全部效果 | ⌃⌥X | 關掉聚光燈、畫圖、白板，清除快捷鍵紀錄（聚光燈也可按 Esc 關閉） |
+### 讓觀眾看清楚操作
+- **放大顯示按鍵**：打字與快捷鍵即時放大顯示在螢幕上，快捷鍵會寫成「Command + C 複製」
+- **快捷鍵紀錄**：按過的快捷鍵會停留在左上或右上角，方便學生跟著做
+- **注音**：打中文時先顯示注音，選字後換成中文
+- **滑鼠效果**：雙擊時出現擴散圓圈，並顯示按的是左鍵、右鍵，長按也看得出來
+- **聚光燈**：周圍變暗，只照亮滑鼠附近
+- **放大鏡**：把滑鼠附近的畫面放大給大家看
+- **多螢幕同步**：接投影機時，每個螢幕都會顯示
 
-畫圖與白板模式下，螢幕上方有可點選的工具列。
+### 在螢幕上講解
+- **畫圖標註**：畫筆、螢光筆、直線、箭頭、方框、圓形
+- **自動圖形**：隨手畫完停一下，就會變成工整的直線、圓形、方形或多邊形
+- **尺與圓規**：可移動、旋轉的尺，靠著尺邊就能畫直線；圓規可以畫圓和弧
+- **白板**：白板、黑板、方格、橫線、點格等背景，可以多頁並存成圖片
+- **截圖標註**：選取畫面截圖後，直接在上面畫重點，存檔或拷貝貼到簡報
 
-### 畫圖 / 白板模式按鍵
+### 課堂小幫手
+- **計時器**：倒數計時、番茄鐘，大大的數字浮在畫面上，全班都看得到
+- **上下課鐘聲**：依課表自動打鐘（內建學校的西敏寺鐘聲，也可換成自己的音檔），並跳出通知
+- **抽籤**：匯入名冊或直接用座號抽人，可以不重複、排除請假，還能自訂學號格式；可自動停止，也可以讓它一直滾動、由老師喊停
+- **全螢幕時鐘**：數字或指針大時鐘，可以顯示在全部或指定的螢幕，也能顯示距離下一次鐘響
+- **黑屏**：讓投影畫面暫時變黑，老師的筆電照常顯示
+- **筆記**：寫講稿或上課重點，可以浮在畫面最上層
 
-`P` 畫筆 · `H` 螢光筆 · `L` 直線 · `A` 箭頭 · `R` 方框 · `O` 圓形（按住 Shift 拉正方/正圓/水平垂直）
-`1–6` 紅藍綠黃黑白 · `-` / `=` 粗細 · `⌘Z` 復原 · `C` 清除 · `W` 切換白板 · `Esc` 離開
-白板專用：`B` 換背景（白/方格/深色/黑板綠）· `N` 新頁 · `←/→` 換頁 · `⌘S` 存成 PNG
+### 保護隱私
+- 輸入**密碼、帳號、學號**等欄位時，螢幕上只會顯示「已隱藏」
+- 使用 **LINE、Messenger、Instagram** 等聊天或社群軟體時，完全不顯示按鍵
+- 所有資料只存在你的電腦，不會上傳到網路
 
-## 編譯與執行
+### 其他
+- 支援繁體中文、简体中文、English、日本語、한국어，預設跟隨系統語言
+- 支援明亮與暗黑模式
 
-```bash
-./build-app.sh
-open build/TeachOverlay.app
-```
+## 下載與安裝
 
-第一次啟動到「系統設定 → 隱私權與安全性」開啟：
-- **輔助使用**（點擊監聽、密碼欄位偵測）
-- **輸入監控**（讀取按鍵）
+1. 到 [Releases](https://github.com/Yucheng0208/TeachOverlay/releases) 下載最新的 `.dmg`
+2. 打開後，把 TeachOverlay 拖到「應用程式」資料夾
+3. 第一次打開時，如果 macOS 說「無法打開」，請到「系統設定 → 隱私權與安全性」，在下方按「強制打開」
 
-> 用 ad-hoc 簽章時，每次重新編譯後 macOS 會把它當成新 App，可能需要在上述設定中移除再重新加入。
-> 正式發佈請設定 `SIGN_IDENTITY` 用 Developer ID 簽章並公證（notarize）。無法上 Mac App Store（輔助使用 API 不能在 Sandbox 中使用）。
+**系統需求**：macOS 13 以上、Apple Silicon（M 系列晶片）的 Mac
 
-## 已知限制
+## 第一次使用：開啟權限
 
-- 注音的中文字是從輸入框讀取（輔助使用 API）；終端機或部分網頁編輯器讀不到時只顯示注音。倚天鍵盤配置暫不支援。
-- 聚光燈開啟期間 Esc 會被用來關閉聚光燈。
-- 終端機 `sudo` 密碼無法自動偵測 → 預設在終端機中隱藏全部按鍵，可從選單關閉。
-- 換螢幕配置（插拔外接螢幕）時，標註與白板內容會重置。
+TeachOverlay 需要以下權限才能運作，請到「系統設定 → 隱私權與安全性」開啟：
 
-## 程式結構
+| 權限 | 用途 |
+|---|---|
+| 輔助使用 | 顯示滑鼠效果、判斷密碼與隱私欄位、讀取注音選字結果 |
+| 輸入監控 | 顯示鍵盤按鍵 |
+| 螢幕錄製 | 放大鏡與截圖標註（不使用這兩項可以不開） |
 
-```
-Sources/TeachOverlay/
-  main.swift              進入點（選單列 App）
-  AppDelegate.swift       選單列選單
-  OverlayController.swift 所有功能的狀態與邏輯、快捷鍵
-  OverlayWindow.swift     每個螢幕的透明疊加層、聚光燈/脈衝、HUD 泡泡
-  CanvasView.swift        畫布（標註 + 白板多頁）
-  KeystrokeMonitor.swift  CGEventTap 按鍵監聽 + 密碼偵測
-  HotKeys.swift           全域快捷鍵
-  Permissions.swift       權限請求
-  MainView.swift          主控台視窗（SwiftUI）
-  DrawToolbar.swift       畫圖／白板浮動工具列
-  FontAwesome.swift       Font Awesome 字型註冊與圖示
-  NotesStore.swift        筆記資料與浮動筆記視窗
-  Localization.swift      語言切換（L() / LF()）
-  ShortcutCombo.swift     組合鍵格式（Command + C / ⌘C）與常見快捷鍵說明
-  Strings.swift           翻譯表（鍵＝繁中；值＝簡中、英、日、韓）
-Resources/Fonts/          Font Awesome Free 字型與授權（CC BY 4.0 / SIL OFL 1.1）
-Resources/Logo/           原始 Logo；AppIcon.icns / AppIcon.png 由下列指令產生
-tools/make-icon.swift     swift tools/make-icon.swift Resources/Logo/logo-source.webp Resources
-                          然後 iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns
-```
+開啟後不需要重新啟動。App 內的「權限」頁可以看到目前狀態。
 
-## 發佈新版本
+## 常用快捷鍵
 
-```bash
-./release.sh 1.0.0
-```
+| 快捷鍵 | 功能 |
+|---|---|
+| ⌃⌥K | 顯示按鍵 開／關 |
+| ⌃⌥C | 雙擊脈衝 開／關 |
+| ⌃⌥S | 聚光燈（Esc 也可關閉） |
+| ⌃⌥Z | 放大鏡 |
+| ⌃⌥D | 畫圖標註 |
+| ⌃⌥W | 白板 |
+| ⌃⌥P | 截圖並標註 |
+| ⌃⌥T | 計時器 |
+| ⌃⌥R | 抽籤 |
+| ⌃⌥B | 黑屏 |
+| ⌃⌥L | 全螢幕時鐘 |
+| ⌃⌥X | 一次關閉所有效果 |
 
-會自動更新版本號、乾淨編譯，並在 `dist/v1.0.0/` 產生：
+⌃ 是 Control、⌥ 是 Option。畫圖時螢幕上方會出現工具列，也可以直接點選。
 
-- `TeachOverlay-1.0.0-macOS-arm64.dmg`：拖曳安裝
-- `TeachOverlay-1.0.0-macOS-arm64.zip`：解壓即用
-- `SHA256SUMS.txt`：校驗碼
+## 常見問題
 
-發佈說明（五種語言）放在 `docs/release-notes/`。有 Apple Developer 帳號時，設定 `SIGN_IDENTITY` 與 `NOTARY_PROFILE` 即可自動簽章並公證。
+**按鍵沒有顯示？**
+請確認「輔助使用」與「輸入監控」都已開啟。更新 App 後若仍無效，請在系統設定中把 TeachOverlay 移除再重新加入。
 
-## 授權
+**打密碼會被學生看到嗎？**
+不會。密碼欄位、密碼管理器和終端機中的按鍵只會顯示「已隱藏」；聊天軟體中則完全不顯示。
 
-本專案以 GNU General Public License v3.0 授權，詳見 [LICENSE](LICENSE)。
-圖示使用 Font Awesome Free 6.7.2（圖示 CC BY 4.0、字型 SIL OFL 1.1），授權全文見 `Resources/Fonts/FontAwesome-LICENSE.txt`。
+**打注音只顯示注音、沒有中文？**
+中文字是從輸入框讀取的，終端機和部分網頁編輯器讀不到，這時只會顯示注音。
+
+**黑屏時筆電也黑了？**
+螢幕設定為「鏡像輸出」時，筆電和投影是同一個畫面。請在「系統設定 → 顯示器」改成延伸顯示。全部黑掉時，點一下畫面或按 Esc 就會恢復。
+
+**鐘聲沒有響？**
+請在「鐘聲」頁開啟「依課表自動打鐘」，並確認上課日與音量。App 需要保持開啟（可以只留在選單列）。
+
+## 問題回報與建議
+
+歡迎到 [Issues](https://github.com/Yucheng0208/TeachOverlay/issues) 回報問題或提出建議。想自己編譯或修改，請看[開發說明](docs/DEVELOPMENT.md)。
+
+## 作者與授權
+
+作者：[Yu-Cheng Chang](https://github.com/Yucheng0208)（[個人網頁](https://www.yucheng208.net/)）
+
+本專案以 [GNU General Public License v3.0](LICENSE) 授權。圖示使用 [Font Awesome Free](https://fontawesome.com)（圖示 CC BY 4.0、字型 SIL OFL 1.1）。

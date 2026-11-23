@@ -9,7 +9,13 @@ enum Pane: String, CaseIterable, Identifiable {
     case shortcuts = "快捷鍵懸停"
     case mouse = "滑鼠效果"
     case spotlight = "聚光燈"
+    case magnifier = "放大鏡與截圖"
+    case blackout = "黑屏"
     case draw = "畫圖與白板"
+    case timer = "計時器"
+    case clock = "時鐘"
+    case bell = "鐘聲"
+    case picker = "抽籤"
     case hotkeys = "快捷鍵一覽"
     case permissions = "權限"
     case general = "一般"
@@ -27,6 +33,12 @@ enum Pane: String, CaseIterable, Identifiable {
         case .mouse: .computerMouse
         case .spotlight: .lightbulb
         case .draw: .chalkboard
+        case .magnifier: .magnifyingGlassPlus
+        case .blackout: .eyeSlash
+        case .timer: .stopwatch
+        case .clock: .clock
+        case .bell: .bell
+        case .picker: .shuffle
         case .hotkeys: .sliders
         case .permissions: .shieldHalved
         case .general: .gear
@@ -37,7 +49,8 @@ enum Pane: String, CaseIterable, Identifiable {
 
     static let groups: [(String, [Pane])] = [
         ("主要", [.overview, .notes]),
-        ("效果", [.keys, .shortcuts, .mouse, .spotlight, .draw]),
+        ("教室", [.timer, .clock, .bell, .picker]),
+        ("效果", [.keys, .shortcuts, .mouse, .spotlight, .magnifier, .blackout, .draw]),
         ("其他", [.hotkeys, .permissions, .general, .help, .about]),
     ]
 }
@@ -101,6 +114,12 @@ struct MainView: View {
         case .mouse: MousePane(c: c)
         case .spotlight: SpotlightPane(c: c)
         case .draw: DrawPane(c: c, draw: draw)
+        case .magnifier: MagnifierPane(c: c)
+        case .blackout: BlackoutPane(black: .shared)
+        case .timer: TimerPane(timer: .shared, bell: .shared)
+        case .clock: ClockPane(clock: .shared)
+        case .bell: BellPane(bell: .shared)
+        case .picker: PickerPane(store: .shared)
         case .hotkeys: HotkeysPane()
         case .permissions: PermissionsPane(c: c)
         case .general: GeneralPane(loc: loc, prefs: .shared, c: c)
@@ -266,6 +285,21 @@ struct OverviewPane: View {
                     ActionCard(icon: .powerOff, title: L("關閉全部效果"),
                                subtitle: L("一次關掉聚光燈、畫圖、白板並清除快捷鍵紀錄。"),
                                shortcut: "⌃⌥X", buttonTitle: L("全部關閉"), destructive: true) { c.turnOffAll() }
+                    ActionCard(icon: .stopwatch, title: L("計時器"),
+                               subtitle: L("倒數計時、番茄鐘、距離鐘響，浮動顯示給全班看。"),
+                               shortcut: "⌃⌥T", buttonTitle: L("顯示計時器")) { TimerPanel.shared.toggle() }
+                    ActionCard(icon: .dice, title: L("抽籤"),
+                               subtitle: L("從名冊或座號抽人，可排除已抽過與請假。"),
+                               shortcut: "⌃⌥R", buttonTitle: L("抽籤")) { PickerStore.shared.draw() }
+                    ActionCard(icon: .magnifyingGlassPlus, title: L("放大鏡"),
+                               subtitle: L("局部放大游標附近的畫面。"),
+                               shortcut: "⌃⌥Z", buttonTitle: c.magnifierOn ? L("關閉") : L("開啟"),
+                               active: c.magnifierOn) { c.toggleMagnifier() }
+                    ActionCard(icon: .camera, title: L("截圖並標註"),
+                               subtitle: L("選取畫面範圍，直接在截圖上畫重點。"),
+                               shortcut: "⌃⌥P", buttonTitle: L("截圖")) { c.captureScreenshot(.selection) }
+                    BlackoutCard(black: .shared)
+                    ClockCard(clock: .shared)
                 }
             }
             .padding(24)
@@ -441,6 +475,22 @@ struct KeysPane: View {
                     .controlSize(.small)
                 }
                 Toggle(L("在終端機中隱藏按鍵（防止 sudo 密碼外洩）"), isOn: $c.hideInTerminals)
+            }
+
+            Section {
+                Toggle(L("聊天與社群 App 中不顯示任何按鍵"), isOn: $c.hideInChatApps)
+                Text(L("LINE、Messenger、訊息、Discord、Telegram、WeChat、WhatsApp、Slack、Teams 等 App，以及瀏覽器中標題含下列字詞的網頁（如 Instagram、Facebook）。"))
+                    .font(.caption).foregroundStyle(.secondary)
+                TextEditor(text: $c.chatKeywords)
+                    .font(.system(size: 12))
+                    .frame(minHeight: 44)
+                    .scrollContentBackground(.hidden)
+                    .padding(4)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)))
+                    .disabled(!c.hideInChatApps)
+                ExcludedAppsEditor(c: c)
+            } header: {
+                Text(L("聊天時不顯示"))
             }
         }
         .formStyle(.grouped)
@@ -635,11 +685,22 @@ struct DrawPane: View {
                 }
             }
 
+            Section {
+                Toggle(L("畫完停住不放，自動變成直線、圓形、方形或多邊形"), isOn: $draw.holdToSnap)
+                SliderRow(title: L("停住多久"), value: $draw.holdDelay, range: 0.3...1.5, step: 0.05) { LF("%.2f 秒", $0) }
+                    .disabled(!draw.holdToSnap)
+            } header: {
+                Text(L("自動圖形"))
+            } footer: {
+                Text(L("尺（U）：拖曳中間移動、拖曳圓形把手旋轉，筆靠近尺邊就會畫出直線。圓規（G）：先拖出半徑，再沿著圓周拖曳畫弧。"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             Section(L("白板")) {
                 Picker(L("背景"), selection: $c.boardStyle) {
                     ForEach(BoardStyle.allCases, id: \.self) { Text($0.name).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
             }
 
             Section {
@@ -662,7 +723,9 @@ struct HotkeysPane: View {
     private let global: [(String, String)] = [
         ("⌃⌥K", "顯示按鍵 開／關"), ("⌃⌥C", "雙擊脈衝 開／關"), ("⌃⌥S", "聚光燈 開／關"),
         ("Esc", "關閉聚光燈（聚光燈開啟時）"), ("⌃⌥↑ / ⌃⌥↓", "聚光燈大小"),
-        ("⌃⌥D", "畫圖標註"), ("⌃⌥W", "白板"), ("⌃⌥X", "關閉全部效果"), ("⌘,", "開啟主控台"),
+        ("⌃⌥D", "畫圖標註"), ("⌃⌥W", "白板"), ("⌃⌥X", "關閉全部效果"),
+        ("⌃⌥T", "計時器"), ("⌃⌥R", "抽籤"), ("⌃⌥Z", "放大鏡"), ("⌃⌥= / ⌃⌥-", "放大倍率"),
+        ("⌃⌥P", "截圖並標註"), ("⌃⌥B", "黑屏"), ("⌃⌥L", "全螢幕時鐘"), ("⌘,", "開啟主控台"),
     ]
     private let drawing: [(String, String)] = [
         ("P H L A R O", "畫筆、螢光筆、直線、箭頭、方框、圓形"), ("Shift + Drag", "水平／垂直、正方形、正圓"),
@@ -699,6 +762,11 @@ struct PermissionsPane: View {
                         ok: Permissions.accessibilityGranted, open: Permissions.openAccessibilitySettings)
                     row(L("輸入監控"), detail: L("讀取鍵盤按鍵"),
                         ok: Permissions.inputMonitoringGranted || c.keys.isRunning, open: Permissions.openInputMonitoringSettings)
+                    row(L("螢幕錄製"), detail: L("放大鏡與截圖標註"),
+                        ok: Permissions.screenRecordingGranted, open: {
+                            Permissions.requestScreenRecording()
+                            Permissions.openScreenRecordingSettings()
+                        })
                 } footer: {
                     Text(L("開啟後不需要重新啟動，約 2 秒內生效。若重新編譯過 App，可能需要在設定中先移除再重新加入。"))
                         .font(.caption).foregroundStyle(.secondary)
@@ -865,8 +933,26 @@ struct AboutPane: View {
                     }
                     Text("TeachOverlay").font(.largeTitle.bold())
                     Text(L("教學螢幕助手")).font(.title3).foregroundStyle(.secondary)
+                    Text(AppLinks.copyright).font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(.top, 10)
+
+                Card {
+                    HStack(spacing: 14) {
+                        FAIcon(icon: .user, size: 24).foregroundStyle(Brand.blue).frame(width: 30)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(L("作者")).font(.caption).foregroundStyle(.secondary)
+                            Text(AppLinks.author).font(.headline)
+                        }
+                        Spacer()
+                        Button { NSWorkspace.shared.open(AppLinks.authorGitHub) } label: {
+                            IconLabel(icon: .github, text: "GitHub", style: .brands)
+                        }
+                        Button { NSWorkspace.shared.open(AppLinks.authorWebsite) } label: {
+                            IconLabel(icon: .globe, text: L("個人網頁"))
+                        }
+                    }
+                }
 
                 Card {
                     VStack(alignment: .leading, spacing: 8) {
@@ -962,6 +1048,12 @@ struct HelpPane: View {
         (.handPointer, "滑鼠效果", "雙擊脈衝、左右鍵提示、長按圓圈，顏色與樣式都能調。", .mouse),
         (.lightbulb, "聚光燈", "周圍變暗、只照亮游標附近，可調大小與暗度。", .spotlight),
         (.chalkboard, "畫圖與白板", "畫筆、螢光筆、箭頭、方框；白板多頁並可存成 PNG。", .draw),
+        (.stopwatch, "計時器", "倒數計時、番茄鐘、距離鐘響，浮動顯示給全班看。", .timer),
+        (.bell, "鐘聲", "依課表自動打上下課鐘，並發送通知。", .bell),
+        (.shuffle, "抽籤", "從名冊或座號抽人，可排除已抽過與請假。", .picker),
+        (.magnifyingGlassPlus, "放大鏡與截圖", "局部放大游標附近的畫面；截圖後直接在上面標註。", .magnifier),
+        (.eyeSlash, "黑屏", "讓投影畫面變黑，筆電畫面保留。", .blackout),
+        (.clock, "時鐘", "全螢幕大時鐘，可顯示在全部或特定螢幕。", .clock),
         (.noteSticky, "筆記", "寫講稿或重點，可浮動顯示在畫面最上層。", .notes),
         (.gear, "一般", "語言、明亮／暗黑模式、登入時自動啟動。", .general),
     ]

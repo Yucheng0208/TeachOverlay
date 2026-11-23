@@ -14,6 +14,14 @@ enum Permissions {
     static var accessibilityGranted: Bool { AXIsProcessTrusted() }
     static var inputMonitoringGranted: Bool { CGPreflightListenEventAccess() }
 
+    static var screenRecordingGranted: Bool { CGPreflightScreenCaptureAccess() }
+
+    static func requestScreenRecording() { _ = CGRequestScreenCaptureAccess() }
+
+    static func openScreenRecordingSettings() {
+        open("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+    }
+
     static func openAccessibilitySettings() {
         open("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
     }

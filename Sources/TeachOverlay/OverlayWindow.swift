@@ -171,6 +171,7 @@ final class ShortcutStackView: NSView {
 final class EffectsView: NSView {
     private let spotlight = CAShapeLayer()
     private let spotlightRing = CAShapeLayer()
+    let lens = LensLayer()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -184,6 +185,7 @@ final class EffectsView: NSView {
         spotlightRing.isHidden = true
         layer?.addSublayer(spotlight)
         layer?.addSublayer(spotlightRing)
+        layer?.addSublayer(lens.container)
     }
 
     required init?(coder: NSCoder) { fatalError() }

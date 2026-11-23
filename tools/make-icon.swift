@@ -1,9 +1,9 @@
 // 把 Logo（白底）做成 macOS App 圖示：去白邊 → 圓角遮罩 → 1024 畫布（824 內容 + 陰影）→ .icns
-// 用法：swift tools/make-icon.swift Resources/Logo/logo-source.webp Resources
+// 用法：swift tools/make-icon.swift <logo 圖檔> Resources [背景差異門檻，預設 60]
 import AppKit
 
 let args = CommandLine.arguments
-guard args.count == 3, let src = NSImage(contentsOfFile: args[1]),
+guard args.count >= 3, let src = NSImage(contentsOfFile: args[1]),
       let cg = src.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
     print("用法：make-icon <logo> <輸出資料夾>"); exit(1)
 }
@@ -16,19 +16,31 @@ let cs = CGColorSpace(name: CGColorSpace.sRGB)!
 let ctx = CGContext(data: &px, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4, space: cs,
                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
 ctx.draw(cg, in: CGRect(x: 0, y: 0, width: w, height: h))
+// 背景色取四個角落的平均（白底或淺色漸層底都適用）
+func pixel(_ x: Int, _ y: Int) -> (Int, Int, Int) {
+    let i = (y * w + x) * 4
+    return (Int(px[i]), Int(px[i + 1]), Int(px[i + 2]))
+}
+let corners = [pixel(4, 4), pixel(w - 5, 4), pixel(4, h - 5), pixel(w - 5, h - 5)]
+let bg = (corners.map(\.0).reduce(0, +) / 4, corners.map(\.1).reduce(0, +) / 4, corners.map(\.2).reduce(0, +) / 4)
+let threshold = Int(CommandLine.arguments.count > 3 ? Int(CommandLine.arguments[3]) ?? 60 : 60)
 var minX = w, minY = h, maxX = 0, maxY = 0
-for y in 0..<h {
-    for x in 0..<w {
-        let i = (y * w + x) * 4
-        let r = Int(px[i]), g = Int(px[i + 1]), b = Int(px[i + 2])
-        if r < 225 || g < 225 || b < 240 {   // 藍紫色本體
+for y in stride(from: 0, to: h, by: 1) {
+    for x in stride(from: 0, to: w, by: 1) {
+        let (r, g, b) = pixel(x, y)
+        let diff = abs(r - bg.0) + abs(g - bg.1) + abs(b - bg.2)
+        if diff > threshold {
             minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
         }
     }
 }
 // 稍微內縮避免殘留白邊抗鋸齒
 let inset = 4
-let box = CGRect(x: minX + inset, y: minY + inset, width: maxX - minX - inset * 2, height: maxY - minY - inset * 2)
+var bw = maxX - minX - inset * 2, bh = maxY - minY - inset * 2
+// App 圖示是正方形：高度比寬度多出來的通常是底下的陰影，保留上緣、裁成正方形
+if bh > bw { bh = bw }
+if bw > bh { let extra = bw - bh; minX += extra / 2; bw = bh }
+let box = CGRect(x: minX + inset, y: minY + inset, width: bw, height: bh)
 print("logo 範圍：\(box)")
 let flippedBox = CGRect(x: box.minX, y: CGFloat(h) - box.maxY, width: box.width, height: box.height)
 let cropped = cg.cropping(to: flippedBox.integral) ?? cg
