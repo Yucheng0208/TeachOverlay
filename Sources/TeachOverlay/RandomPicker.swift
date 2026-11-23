@@ -327,11 +327,10 @@ struct PickerWidget: View {
         let theme = controller.overlayTheme
         VStack(spacing: 14) {
             HStack {
+                Color.clear.frame(width: 10, height: 1)   // 留給左上角關閉鈕
                 IconLabel(icon: .shuffle, text: L("抽籤")).font(.system(size: 15, weight: .semibold))
                 Spacer()
                 Text(LF("剩餘 %d", store.remainingCount)).font(.caption).foregroundStyle(.secondary)
-                Button { PickerPanel.shared.hide() } label: { FAIcon(icon: .xmark, size: 12) }
-                    .buttonStyle(.plain)
             }
             Spacer(minLength: 0)
             Text(store.displayText.isEmpty ? "?" : store.displayText)
@@ -360,6 +359,7 @@ struct PickerWidget: View {
         }
         .padding(18)
         .frame(width: 460, height: 300)
+        .macCloseButton { PickerPanel.shared.hide() }
         .foregroundStyle(Color(nsColor: theme.text))
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)

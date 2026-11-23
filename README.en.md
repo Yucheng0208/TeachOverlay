@@ -28,6 +28,7 @@ When you teach, record or stream, let your students and viewers see exactly what
 - **Timer**: countdown and Pomodoro with big numbers floating on screen for the whole class
 - **Class bell**: rings on your schedule (a built-in Westminster school chime, or your own sound) and sends a notification
 - **Random picker**: pick from an imported roster or seat numbers, with no repeats, absent students skipped and custom ID formats; stop automatically, or keep it rolling until you call stop
+- **Speaker timer**: green, yellow and red signals, with reminders at 2 minutes left, the last minute and time up; flashes and counts overtime; supports a speaker list
 - **Full-screen clock**: a big digital or analog clock on all or selected displays, with time until the next bell
 - **Blackout**: temporarily black out the projector while your laptop screen stays on
 - **Notes**: write scripts or key points and float them on top of everything
@@ -76,6 +77,7 @@ No restart needed. The Permissions page in the app shows the current status.
 | ⌃⌥R | Random picker |
 | ⌃⌥B | Blackout |
 | ⌃⌥L | Full-screen clock |
+| ⌃⌥V | Speaker timer |
 | ⌃⌥X | Turn off all effects |
 
 ⌃ is Control and ⌥ is Option. While drawing, a toolbar appears at the top of the screen.

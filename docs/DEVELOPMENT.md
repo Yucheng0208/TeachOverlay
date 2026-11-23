@@ -41,6 +41,7 @@ Sources/TeachOverlay/
   Magnifier.swift               放大鏡（ScreenCaptureKit）
   Blackout.swift                黑屏
   FullScreenClock.swift         全螢幕時鐘
+  SpeakerTimer.swift            演講計時（燈號、多段提醒、講者名單）
   NotesStore.swift              筆記與浮動筆記
   HotKeys.swift                 全域快捷鍵
   Permissions.swift             權限

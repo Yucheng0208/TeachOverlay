@@ -14,6 +14,7 @@ enum Pane: String, CaseIterable, Identifiable {
     case draw = "畫圖與白板"
     case timer = "計時器"
     case clock = "時鐘"
+    case speaker = "演講計時"
     case bell = "鐘聲"
     case picker = "抽籤"
     case hotkeys = "快捷鍵一覽"
@@ -37,6 +38,7 @@ enum Pane: String, CaseIterable, Identifiable {
         case .blackout: .eyeSlash
         case .timer: .stopwatch
         case .clock: .clock
+        case .speaker: .microphone
         case .bell: .bell
         case .picker: .shuffle
         case .hotkeys: .sliders
@@ -49,7 +51,7 @@ enum Pane: String, CaseIterable, Identifiable {
 
     static let groups: [(String, [Pane])] = [
         ("主要", [.overview, .notes]),
-        ("教室", [.timer, .clock, .bell, .picker]),
+        ("教室", [.timer, .speaker, .clock, .bell, .picker]),
         ("效果", [.keys, .shortcuts, .mouse, .spotlight, .magnifier, .blackout, .draw]),
         ("其他", [.hotkeys, .permissions, .general, .help, .about]),
     ]
@@ -118,6 +120,7 @@ struct MainView: View {
         case .blackout: BlackoutPane(black: .shared)
         case .timer: TimerPane(timer: .shared, bell: .shared)
         case .clock: ClockPane(clock: .shared)
+        case .speaker: SpeakerPane(timer: .shared)
         case .bell: BellPane(bell: .shared)
         case .picker: PickerPane(store: .shared)
         case .hotkeys: HotkeysPane()
@@ -300,6 +303,7 @@ struct OverviewPane: View {
                                shortcut: "⌃⌥P", buttonTitle: L("截圖")) { c.captureScreenshot(.selection) }
                     BlackoutCard(black: .shared)
                     ClockCard(clock: .shared)
+                    SpeakerCard(timer: .shared)
                 }
             }
             .padding(24)
@@ -725,7 +729,7 @@ struct HotkeysPane: View {
         ("Esc", "關閉聚光燈（聚光燈開啟時）"), ("⌃⌥↑ / ⌃⌥↓", "聚光燈大小"),
         ("⌃⌥D", "畫圖標註"), ("⌃⌥W", "白板"), ("⌃⌥X", "關閉全部效果"),
         ("⌃⌥T", "計時器"), ("⌃⌥R", "抽籤"), ("⌃⌥Z", "放大鏡"), ("⌃⌥= / ⌃⌥-", "放大倍率"),
-        ("⌃⌥P", "截圖並標註"), ("⌃⌥B", "黑屏"), ("⌃⌥L", "全螢幕時鐘"), ("⌘,", "開啟主控台"),
+        ("⌃⌥P", "截圖並標註"), ("⌃⌥B", "黑屏"), ("⌃⌥L", "全螢幕時鐘"), ("⌃⌥V", "演講計時"), ("⌘,", "開啟主控台"),
     ]
     private let drawing: [(String, String)] = [
         ("P H L A R O", "畫筆、螢光筆、直線、箭頭、方框、圓形"), ("Shift + Drag", "水平／垂直、正方形、正圓"),
@@ -1054,6 +1058,7 @@ struct HelpPane: View {
         (.magnifyingGlassPlus, "放大鏡與截圖", "局部放大游標附近的畫面；截圖後直接在上面標註。", .magnifier),
         (.eyeSlash, "黑屏", "讓投影畫面變黑，筆電畫面保留。", .blackout),
         (.clock, "時鐘", "全螢幕大時鐘，可顯示在全部或特定螢幕。", .clock),
+        (.microphone, "演講計時", "綠黃紅燈號與多段提醒，避免講者超時。", .speaker),
         (.noteSticky, "筆記", "寫講稿或重點，可浮動顯示在畫面最上層。", .notes),
         (.gear, "一般", "語言、明亮／暗黑模式、登入時自動啟動。", .general),
     ]

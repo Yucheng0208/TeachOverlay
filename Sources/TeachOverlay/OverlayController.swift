@@ -352,6 +352,7 @@ final class OverlayController: ObservableObject {
         hk.register(keyCode: kVK_ANSI_P, modifiers: m) { [weak self] in self?.captureScreenshot(.selection) }
         hk.register(keyCode: kVK_ANSI_B, modifiers: m) { BlackoutController.shared.toggle() }
         hk.register(keyCode: kVK_ANSI_L, modifiers: m) { ClockController.shared.toggle() }
+        hk.register(keyCode: kVK_ANSI_V, modifiers: m) { SpeakerTimer.shared.toggleDisplay() }
     }
 
     /// ⌃⌥X：關閉聚光燈、畫圖、白板、清除快捷鍵紀錄
@@ -359,6 +360,7 @@ final class OverlayController: ObservableObject {
         if spotlightOn { toggleSpotlight() }
         if magnifierOn { toggleMagnifier() }
         ClockController.shared.hide()
+        SpeakerTimer.shared.hide()
         BlackoutController.shared.deactivate()
         exitDraw()
         shortcutHistory.removeAll()

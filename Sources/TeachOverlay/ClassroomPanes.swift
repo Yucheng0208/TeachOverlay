@@ -125,6 +125,8 @@ struct BellPane: View {
                 Toggle(L("上課也打鐘"), isOn: $bell.ringOnStart)
                 Toggle(L("發送系統通知"), isOn: $bell.notify)
                 Toggle(L("在螢幕上顯示提示"), isOn: $bell.showBanner)
+                Toggle(L("選單列顯示距離下課"), isOn: $bell.showCountdownInMenuBar)
+                Toggle(L("畫圖工具列顯示距離下課"), isOn: $bell.showCountdownInToolbar)
             }
 
             Section(L("鐘聲")) {

@@ -72,7 +72,8 @@ final class ClockController: ObservableObject {
         windows = targetScreens().map { screen in
             let w = ClockWindow(screen: screen)
             w.onDismiss = { [weak self] in self?.hide() }
-            w.contentView = NSHostingView(rootView: FullScreenClockView(clock: self, bell: .shared, loc: .shared))
+            w.closeButton = CornerCloseButton.install(
+                in: w, content: NSHostingView(rootView: FullScreenClockView(clock: self, bell: .shared, loc: .shared))) { [weak self] in self?.hide() }
             w.orderFrontRegardless()
             return w
         }
@@ -82,6 +83,9 @@ final class ClockController: ObservableObject {
 
 private final class ClockWindow: NSWindow {
     var onDismiss: (() -> Void)?
+    var closeButton: CornerCloseButton?
+
+    override func mouseMoved(with event: NSEvent) { closeButton?.reveal() }
 
     init(screen: NSScreen) {
         super.init(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)

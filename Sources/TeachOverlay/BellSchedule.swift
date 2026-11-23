@@ -28,6 +28,9 @@ final class BellScheduler: ObservableObject {
     @Published var volume: Double { didSet { d.set(volume, forKey: "bell.volume") } }
     @Published var customSoundPath: String? { didSet { d.set(customSoundPath, forKey: "bell.sound") } }
     @Published var showBanner: Bool { didSet { d.set(showBanner, forKey: "bell.banner") } }
+    /// 選單列與畫圖工具列顯示「距離下課」
+    @Published var showCountdownInMenuBar: Bool { didSet { d.set(showCountdownInMenuBar, forKey: "bell.menubar") } }
+    @Published var showCountdownInToolbar: Bool { didSet { d.set(showCountdownInToolbar, forKey: "bell.toolbar") } }
 
     // 產生課表用
     @Published var genFirstStart: Int { didSet { d.set(genFirstStart, forKey: "bell.gen.first") } }
@@ -39,6 +42,8 @@ final class BellScheduler: ObservableObject {
 
     @Published private(set) var nextEntry: BellEntry?
     @Published private(set) var secondsToNext: Int = 0
+    @Published private(set) var nextEnd: BellEntry?
+    @Published private(set) var secondsToNextEnd: Int = 0
 
     /// 打鐘時呼叫（顯示螢幕橫幅）
     var onRing: ((BellEntry) -> Void)?
@@ -58,7 +63,7 @@ final class BellScheduler: ObservableObject {
 
     private init() {
         d.register(defaults: ["bell.enabled": false, "bell.ringStart": true, "bell.notify": true, "bell.volume": 0.8,
-                              "bell.banner": true, "bell.gen.first": 8 * 60 + 10, "bell.gen.class": 50,
+                              "bell.banner": true, "bell.menubar": true, "bell.toolbar": true, "bell.gen.first": 8 * 60 + 10, "bell.gen.class": 50,
                               "bell.gen.break": 10, "bell.gen.periods": 7, "bell.gen.lunchAfter": 4, "bell.gen.lunch": 70])
         enabled = d.bool(forKey: "bell.enabled")
         ringOnStart = d.bool(forKey: "bell.ringStart")
@@ -66,6 +71,8 @@ final class BellScheduler: ObservableObject {
         volume = d.double(forKey: "bell.volume")
         customSoundPath = d.string(forKey: "bell.sound")
         showBanner = d.bool(forKey: "bell.banner")
+        showCountdownInMenuBar = d.bool(forKey: "bell.menubar")
+        showCountdownInToolbar = d.bool(forKey: "bell.toolbar")
         genFirstStart = d.integer(forKey: "bell.gen.first")
         genClassLength = d.integer(forKey: "bell.gen.class")
         genBreakLength = d.integer(forKey: "bell.gen.break")
@@ -141,6 +148,9 @@ final class BellScheduler: ObservableObject {
         // 下一次鐘響
         let upcoming = today ? entries.first { $0.minutes * 60 > secondOfDay && ($0.kind == .end || ringOnStart) } : nil
         nextEntry = upcoming
+        let end = today ? entries.first { $0.kind == .end && $0.minutes * 60 > secondOfDay } : nil
+        nextEnd = end
+        secondsToNextEnd = end.map { $0.minutes * 60 - secondOfDay } ?? 0
         secondsToNext = upcoming.map { $0.minutes * 60 - secondOfDay } ?? 0
 
         guard enabled, today else { return }
@@ -159,6 +169,14 @@ final class BellScheduler: ObservableObject {
         let e = entry ?? BellEntry(minutes: 0, kind: .end, label: L("下課"))
         if notify { sendNotification(e) }
         if showBanner { onRing?(e) }
+    }
+
+    /// 「距離下課」短字串，例如 12:34；今天沒有下課鐘時為 nil
+    var endCountdownText: String? {
+        guard enabled, nextEnd != nil else { return nil }
+        let s = secondsToNextEnd
+        let h = s / 3600, m = (s % 3600) / 60, sec = s % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%02d:%02d", m, sec)
     }
 
     var nextText: String {

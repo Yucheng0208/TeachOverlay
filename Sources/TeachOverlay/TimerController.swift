@@ -241,12 +241,10 @@ struct TimerWidget: View {
         let theme = controller.overlayTheme
         VStack(spacing: 8 * k) {
             HStack(spacing: 6 * k) {
+                Color.clear.frame(width: 14, height: 1)   // 留給左上角關閉鈕
                 FAIcon(icon: timer.mode == .countdown ? .hourglassHalf : (timer.mode == .bell ? .bell : .stopwatch), size: 13 * k)
                 Text(timer.title).font(.system(size: 13 * k, weight: .semibold)).lineLimit(1)
                 Spacer()
-                Button { TimerPanel.shared.hide() } label: { FAIcon(icon: .xmark, size: 12 * k) }
-                    .buttonStyle(.plain)
-                    .help(L("關閉"))
             }
             Text(timer.display)
                 .font(.system(size: 54 * k, weight: .bold, design: .rounded).monospacedDigit())
@@ -272,6 +270,7 @@ struct TimerWidget: View {
         }
         .padding(14 * k)
         .frame(width: 300 * k, height: 172 * k)
+        .macCloseButton(size: 13) { TimerPanel.shared.hide() }
         .foregroundStyle(Color(nsColor: theme.text))
         .background(
             RoundedRectangle(cornerRadius: 18 * k, style: .continuous)

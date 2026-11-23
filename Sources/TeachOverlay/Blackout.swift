@@ -67,6 +67,9 @@ final class BlackoutController: ObservableObject {
         windows = targetScreens().map { screen in
             let w = BlackoutWindow(screen: screen, message: showMessage ? L("請看老師") : nil)
             w.onDismiss = { [weak self] in self?.deactivate() }
+            if let content = w.contentView {
+                w.closeButton = CornerCloseButton.install(in: w, content: content) { [weak self] in self?.deactivate() }
+            }
             w.orderFrontRegardless()
             return w
         }
@@ -76,6 +79,9 @@ final class BlackoutController: ObservableObject {
 
 private final class BlackoutWindow: NSWindow {
     var onDismiss: (() -> Void)?
+    var closeButton: CornerCloseButton?
+
+    override func mouseMoved(with event: NSEvent) { closeButton?.reveal() }
 
     init(screen: NSScreen, message: String?) {
         super.init(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)

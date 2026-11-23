@@ -25,6 +25,7 @@ enum FA: UInt32 {
     case magnifyingGlassMinus = 0xf010, stopwatch = 0xf2f2, hourglassHalf = 0xf252, play = 0xf04b
     case pause = 0xf04c, rotateRight = 0xf2f9, forwardStep = 0xf051, copy = 0xf0c5, cropSimple = 0xf565
     case shapes = 0xf61f, user = 0xf007, bell = 0xf0f3, shuffle = 0xf074, users = 0xf0c0
+    case microphone = 0xf130
     case fileImport = 0xf56f, userSlash = 0xf506, checkDouble = 0xf560, hashtag = 0x23, dice = 0xf522
 
     var glyph: String { String(Character(UnicodeScalar(rawValue)!)) }

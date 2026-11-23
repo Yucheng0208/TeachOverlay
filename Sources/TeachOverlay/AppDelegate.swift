@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindowDelegate {
     private var statusItem: NSStatusItem!
+    private var menuBarTimer: Timer?
     private let controller = OverlayController()
     private var mainWindow: NSWindow?
     private let nav = NavModel()
@@ -121,7 +122,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = FontAwesome.templateImage(.chalkboardUser, size: 15)
             ?? NSImage(systemSymbolName: "keyboard", accessibilityDescription: "TeachOverlay")
+        statusItem.button?.imagePosition = .imageLeading
+        // 選單列顯示距離下課（每秒更新）
+        let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateMenuBarCountdown() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        menuBarTimer = t
         setupStatusMenu()
+    }
+
+    private func updateMenuBarCountdown() {
+        let bell = BellScheduler.shared
+        guard let button = statusItem?.button else { return }
+        if bell.showCountdownInMenuBar, let text = bell.endCountdownText {
+            let title = " " + L("下課") + " " + text
+            if button.title != title {
+                button.attributedTitle = NSAttributedString(string: title, attributes: [
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .medium),
+                ])
+            }
+        } else if !button.title.isEmpty {
+            button.title = ""
+        }
     }
 
     private func setupStatusMenu() {
@@ -145,6 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         menu.addItem(.separator())
         menu.addItem(ClosureMenuItem(L("計時器"), key: "t", mods: mods, icon: .stopwatch, state: { TimerPanel.shared.isVisible }) { TimerPanel.shared.toggle() })
         menu.addItem(ClosureMenuItem(L("抽籤"), key: "r", mods: mods, icon: .dice) { PickerStore.shared.draw() })
+        menu.addItem(ClosureMenuItem(L("演講計時"), key: "v", mods: mods, icon: .microphone, state: { SpeakerTimer.shared.active }) { SpeakerTimer.shared.toggleDisplay() })
         menu.addItem(ClosureMenuItem(L("全螢幕時鐘"), key: "l", mods: mods, icon: .clock, state: { ClockController.shared.active }) { ClockController.shared.toggle() })
         menu.addItem(ClosureMenuItem(L("鐘聲設定…"), icon: .bell) { [weak self] in self?.showMainWindow(pane: .bell) })
         menu.addItem(.separator())

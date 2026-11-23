@@ -20,11 +20,15 @@ struct DrawToolbar: View {
     @ObservedObject var controller: OverlayController
     @ObservedObject var draw: DrawSettings
     @ObservedObject var loc: Loc = .shared
+    @ObservedObject var bell: BellScheduler = .shared
     let canvas: () -> CanvasView?
 
     var body: some View {
         let _ = controller.revision
         HStack(spacing: 6) {
+            MacCloseButton(size: 14) { controller.exitDraw() }
+                .help(L("離開") + "（Esc）")
+                .padding(.trailing, 6)
             HStack(spacing: 6) {
                 FAIcon(icon: controller.whiteboardOn ? .chalkboard : .penNib, size: 14)
                 Text(controller.whiteboardOn ? L("白板") : L("標註")).font(.system(size: 13, weight: .bold))
@@ -90,11 +94,21 @@ struct DrawToolbar: View {
 
             sep
             ToolButton(icon: .camera, help: L("截圖並標註") + "（⌃⌥P）") { controller.captureScreenshot(.selection) }
+            if bell.showCountdownInToolbar, let left = bell.endCountdownText {
+                sep
+                HStack(spacing: 5) {
+                    FAIcon(icon: .bell, size: 12)
+                    Text(L("距離下課")).font(.system(size: 11, weight: .medium)).opacity(0.75)
+                    Text(left).font(.system(size: 13, weight: .bold).monospacedDigit())
+                        .foregroundStyle(bell.secondsToNextEnd <= 300 ? Color.red : Color(nsColor: theme.text))
+                }
+                .help(bell.nextEnd.map { "\($0.label) \($0.timeText)" } ?? "")
+                .padding(.horizontal, 2)
+            }
             ToolButton(icon: controller.whiteboardOn ? .display : .chalkboard,
                        help: (controller.whiteboardOn ? L("回到螢幕標註") : L("切換到白板")) + "（W）") {
                 controller.switchDrawMode()
             }
-            ToolButton(icon: .xmark, help: L("離開") + "（Esc）") { controller.exitDraw() }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
