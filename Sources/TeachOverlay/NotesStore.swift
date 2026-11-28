@@ -115,6 +115,7 @@ final class NotePanel: NSObject, NSWindowDelegate {
         }
         panel?.title = L("筆記")
         panel?.contentView = NSHostingView(rootView: view)
+        panel?.keepOnScreen()
         panel?.orderFrontRegardless()
     }
 

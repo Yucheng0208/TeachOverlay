@@ -59,6 +59,7 @@ final class OverlayView: NSView {
     let shortcuts = ShortcutStackView(frame: .zero)
     let mouseBadge = MouseBadgeView(frame: NSRect(x: 0, y: 0, width: 100, height: 50))
     private(set) var toolbarView: NSView?
+    var toolbarLayout: ToolbarLayout?
 
     /// 選單列高度與 Dock 高度（避免蓋住）
     var topInset: CGFloat = 30 { didSet { needsLayout = true } }
@@ -157,8 +158,18 @@ final class ShortcutStackView: NSView {
     func relayout() {
         isHidden = corner == .off
         var y = bounds.height - topInset
+        let floor = bounds.height * 0.35          // 最多用到畫面上方約 65% 高度
+        let maxWidth = bounds.width * 0.45
         for p in pills {
             y -= p.frame.height
+            p.isHidden = y < floor                // 放不下的舊紀錄先不顯示
+            if p.frame.width > maxWidth {
+                p.frame.size.width = maxWidth
+                if let label = p.subviews.first as? NSTextField {
+                    label.lineBreakMode = .byTruncatingTail
+                    label.frame.size.width = maxWidth - fontSize * 1.2
+                }
+            }
             let x = corner == .topLeft ? 20 : bounds.width - p.frame.width - 20
             p.frame.origin = CGPoint(x: x, y: y)
             y -= 8

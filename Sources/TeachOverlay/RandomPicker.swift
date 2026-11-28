@@ -308,6 +308,7 @@ final class PickerPanel {
         if panel?.contentView == nil || !(panel?.isVisible ?? false) {
             panel?.contentView = DraggablePickerHost(rootView: PickerWidget(store: .shared, controller: controller, loc: .shared))
         }
+        panel?.keepOnScreen()
         panel?.orderFrontRegardless()
     }
 

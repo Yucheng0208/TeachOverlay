@@ -303,7 +303,8 @@ final class CanvasView: NSView {
 
     func toggleRuler() {
         if ruler == nil {
-            ruler = RulerState(center: CGPoint(x: bounds.midX, y: bounds.midY))
+            ruler = RulerState(center: CGPoint(x: bounds.midX, y: bounds.midY),
+                               length: min(640, max(300, bounds.width * 0.6)))
         } else {
             ruler = nil
         }

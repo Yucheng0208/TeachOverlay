@@ -14,10 +14,11 @@ struct TimerPane: View {
     var body: some View {
         Form {
             Section {
-                HStack {
-                    Text(timer.display)
-                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
-                    Spacer()
+                Text(timer.display)
+                    .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                FlowLayout {
                     Button { timer.toggle() } label: {
                         IconLabel(icon: timer.running ? .pause : .play, text: L(timer.running ? "暫停" : "開始"))
                     }
@@ -38,7 +39,7 @@ struct TimerPane: View {
             switch timer.mode {
             case .countdown:
                 Section(L("倒數計時")) {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90))], spacing: 8) {
+                    FlowLayout {
                         ForEach(TimerController.presets, id: \.self) { s in
                             Button(presetLabel(s)) { timer.setCountdown(s) }
                         }

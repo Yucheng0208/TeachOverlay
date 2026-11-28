@@ -96,12 +96,12 @@ struct MainView: View {
                 }
             }
             .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 340)
+            .navigationSplitViewColumnWidth(min: 190, ideal: 230, max: 320)
         } detail: {
             detail
                 .navigationTitle(L(nav.pane?.rawValue ?? "總覽"))
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .frame(minWidth: 680, minHeight: 440)
         .tint(Brand.blue)
         .accentColor(Brand.blue)
         .id(loc.resolved)   // 換語言時整個重建
@@ -263,7 +263,7 @@ struct OverviewPane: View {
                     }
                 }
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 14) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 14)], spacing: 14) {
                     FeatureCard(icon: .keyboard, title: L("放大顯示按鍵"),
                                 subtitle: L("打字與組合鍵放大顯示；帳號、密碼等隱私欄位只顯示「已隱藏」。"),
                                 shortcut: "⌃⌥K", isOn: $c.keystrokesEnabled)

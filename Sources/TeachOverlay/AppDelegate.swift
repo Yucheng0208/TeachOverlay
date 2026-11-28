@@ -47,7 +47,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             let w = NSWindow(contentViewController: host)
             w.title = "TeachOverlay"
             w.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
-            w.setContentSize(NSSize(width: 980, height: 660))
+            // 依螢幕大小決定初始尺寸（小筆電、投影機也放得下）
+            let visible = (NSScreen.main ?? NSScreen.screens.first)?.visibleFrame.size ?? NSSize(width: 1280, height: 800)
+            w.setContentSize(NSSize(width: min(980, visible.width * 0.9), height: min(660, visible.height * 0.88)))
+            w.contentMinSize = NSSize(width: min(720, visible.width * 0.9), height: min(480, visible.height * 0.8))
             w.isReleasedWhenClosed = false
             w.delegate = self
             w.center()
@@ -57,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         // 開著主控台時出現在 Dock 和 ⌘Tab；關掉後回到只在選單列
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        mainWindow?.keepOnScreen()
         mainWindow?.makeKeyAndOrderFront(nil)
     }
 

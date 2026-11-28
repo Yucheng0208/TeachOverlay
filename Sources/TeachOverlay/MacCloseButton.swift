@@ -105,3 +105,25 @@ final class CornerCloseButton: NSView {
         return button
     }
 }
+
+extension NSWindow {
+    /// 確保視窗完整出現在某個螢幕內（例如外接螢幕拔掉後，自動移回來）
+    func keepOnScreen() {
+        let f = frame
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return }
+        // 找重疊最多的螢幕；完全沒重疊就用主螢幕
+        let best = screens.max { a, b in
+            a.visibleFrame.intersection(f).width * a.visibleFrame.intersection(f).height
+                < b.visibleFrame.intersection(f).width * b.visibleFrame.intersection(f).height
+        }
+        let area = (best.map { $0.visibleFrame.intersects(f) } ?? false) ? best!.visibleFrame
+            : (NSScreen.main ?? screens[0]).visibleFrame
+        var n = f
+        n.size.width = min(n.width, area.width)
+        n.size.height = min(n.height, area.height)
+        n.origin.x = min(max(n.minX, area.minX), area.maxX - n.width)
+        n.origin.y = min(max(n.minY, area.minY), area.maxY - n.height)
+        if n != f { setFrame(n, display: true) }
+    }
+}

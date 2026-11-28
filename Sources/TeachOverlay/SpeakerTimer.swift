@@ -360,6 +360,7 @@ final class SpeakerTimer: ObservableObject {
             p.contentView = SpeakerHost(rootView: SpeakerFloatingView(timer: self, loc: .shared))
             panel = p
         }
+        panel?.keepOnScreen()
         panel?.orderFrontRegardless()
     }
 }
@@ -532,22 +533,24 @@ struct SpeakerPane: View {
                     RoundedRectangle(cornerRadius: 10).fill(timer.phase.color).frame(width: 18, height: 54)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(timer.currentSpeakerName ?? L(timer.phase.label)).font(.caption).foregroundStyle(.secondary)
+                            .lineLimit(1)
                         Text(timer.displayText).font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                     }
-                    Spacer()
+                    Spacer(minLength: 0)
+                }
+                FlowLayout {
                     Button { timer.toggle() } label: { IconLabel(icon: timer.running ? .pause : .play, text: L(timer.running ? "暫停" : "開始")) }
                     Button { timer.reset() } label: { IconLabel(icon: .rotateLeft, text: L("重設")) }
-                    Button { timer.toggleDisplay() } label: {
-                        IconLabel(icon: .windowRestore, text: timer.active ? L("隱藏計時畫面") : L("顯示計時畫面"))
-                    }
-                }
-                HStack {
                     Button("-1 " + L("分鐘")) { timer.adjust(minutes: -1) }
                     Button("+1 " + L("分鐘")) { timer.adjust(minutes: 1) }
                     if timer.useAgenda {
-                        Spacer()
                         Button { timer.previous() } label: { IconLabel(icon: .chevronLeft, text: L("上一位")) }
                         Button { timer.next() } label: { IconLabel(icon: .forwardStep, text: L("下一位")) }
+                    }
+                    Button { timer.toggleDisplay() } label: {
+                        IconLabel(icon: .windowRestore, text: timer.active ? L("隱藏計時畫面") : L("顯示計時畫面"))
                     }
                 }
             } footer: {
@@ -556,7 +559,7 @@ struct SpeakerPane: View {
             }
 
             Section(L("演講時間")) {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 8) {
+                FlowLayout {
                     ForEach(SpeakerTimer.presets, id: \.self) { m in
                         Button(LF("%d 分鐘", Int(m))) { timer.setPreset(m) }
                     }

@@ -310,7 +310,9 @@ final class OverlayController: ObservableObject {
             v.effects.setSpotlightVisible(spotlightOn)
             v.shortcuts.corner = shortcutCorner
             v.shortcuts.fontSize = shortcutFontSize
-            let toolbar = DrawToolbar(controller: self, draw: .shared, canvas: { [weak v] in v?.canvas })
+            let layout = ToolbarLayout()
+            v.toolbarLayout = layout
+            let toolbar = DrawToolbar(controller: self, draw: .shared, layout: layout, canvas: { [weak v] in v?.canvas })
             v.installToolbar(NSHostingView(rootView: toolbar))
             w.orderFrontRegardless()
             return w
@@ -656,6 +658,28 @@ final class OverlayController: ObservableObject {
         if whiteboardOn { exitDraw() } else { enterDraw(whiteboard: true) }
     }
 
+    /// 依各螢幕寬度決定工具列排成幾排，避免小螢幕被切掉
+    func fitToolbars() {
+        for w in overlays {
+            guard let layout = w.overlayView.toolbarLayout else { continue }
+            let available = w.frame.width - 32
+            var rows = 3
+            for r in 1...3 where measureToolbar(rows: r, view: w.overlayView) <= available {
+                rows = r
+                break
+            }
+            layout.rows = rows
+        }
+    }
+
+    private func measureToolbar(rows: Int, view: OverlayView) -> CGFloat {
+        let probe = ToolbarLayout()
+        probe.rows = rows
+        let host = NSHostingView(rootView: DrawToolbar(controller: self, draw: .shared, layout: probe,
+                                                        canvas: { [weak view] in view?.canvas }))
+        return host.fittingSize.width
+    }
+
     func switchDrawMode() {
         enterDraw(whiteboard: !whiteboardOn)
     }
@@ -676,6 +700,7 @@ final class OverlayController: ObservableObject {
             v.toolbarView?.isHidden = false
         }
         revision += 1
+        fitToolbars()
         NSApp.activate(ignoringOtherApps: true)
         overlayUnderMouse?.makeKeyAndOrderFront(nil)
     }

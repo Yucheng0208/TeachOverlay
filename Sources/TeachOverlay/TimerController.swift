@@ -187,8 +187,14 @@ final class TimerPanel {
     weak var controller: OverlayController?
 
     private var size: NSSize {
+        NSSize(width: 300 * effectiveScale, height: 172 * effectiveScale)
+    }
+
+    /// 放大倍率不超過螢幕大小
+    var effectiveScale: Double {
         let k = TimerController.shared.panelScale
-        return NSSize(width: 300 * k, height: 172 * k)
+        guard let v = (panel?.screen ?? NSScreen.main)?.visibleFrame else { return k }
+        return min(k, v.width * 0.9 / 300, v.height * 0.9 / 172)
     }
 
     func toggle() { isVisible ? hide() : show() }
@@ -215,6 +221,7 @@ final class TimerPanel {
         guard let controller else { return }
         panel?.contentView = DraggableHostingView(rootView: TimerWidget(timer: .shared, controller: controller, loc: .shared))
         resize()
+        panel?.keepOnScreen()
         panel?.orderFrontRegardless()
     }
 
@@ -227,6 +234,7 @@ final class TimerPanel {
         f.origin.y += f.height - s.height
         f.size = s
         panel.setFrame(f, display: true)
+        panel.keepOnScreen()
     }
 }
 
@@ -237,7 +245,7 @@ struct TimerWidget: View {
     @ObservedObject var bell: BellScheduler = .shared
 
     var body: some View {
-        let k = timer.panelScale
+        let k = TimerPanel.shared.effectiveScale
         let theme = controller.overlayTheme
         VStack(spacing: 8 * k) {
             HStack(spacing: 6 * k) {
@@ -282,7 +290,7 @@ struct TimerWidget: View {
     }
 
     private func widgetButton(_ icon: FA, _ help: String, action: @escaping () -> Void) -> some View {
-        let k = timer.panelScale
+        let k = TimerPanel.shared.effectiveScale
         return Button(action: action) {
             FAIcon(icon: icon, size: 15 * k)
                 .frame(width: 38 * k, height: 30 * k)
